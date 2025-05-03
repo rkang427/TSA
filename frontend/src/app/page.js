@@ -1,11 +1,13 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import Papa from 'papaparse';
 import Chart from 'chart.js/auto';
+import { useRouter } from 'next/navigation';
 
-const MyChart = () => {
-  const [csvData1, setCsvData1] = useState([]);
-  const [csvData2, setCsvData2] = useState([]);
+const Home = () => {
+  const [demograph, setDemograph] = useState([]);
+  const chartInstanceRef = useRef(null);
+  const router = useRouter();
 
   useEffect(() => {
     fetch('/student_demographics.csv')
@@ -15,84 +17,68 @@ const MyChart = () => {
           header: true,
           skipEmptyLines: true,
           complete: (results) => {
-            setCsvData1(results.data);
+            setDemograph(results.data);
           }
         });
       })
-      .catch(error => {
-        console.error('Error fetching CSV file:', error);
-      });
+      .catch(error => console.error('Error fetching CSV file:', error));
+  }, []);
 
-    fetch('/semantics.csv')
-      .then(response => response.text())
-      .then(csvText => {
-        Papa.parse(csvText, {
-          header: true,
-          skipEmptyLines: true,
-          complete: (results) => {
-            setCsvData2(results.data);
+  // Render chart after demograph state is set
+  useEffect(() => {
+    if (!demograph.length) return;
+
+    const city_dct = {};
+    demograph.forEach(item => {
+      city_dct[item['City']] = (city_dct[item['City']] || 0) + 1;
+    });
+
+    let cityLabels = Object.keys(city_dct);
+    let cityData = Object.values(city_dct);
+
+    const unknownIndex = cityLabels.indexOf('Unknown');
+    if (unknownIndex !== -1) {
+      cityLabels.splice(unknownIndex, 1);
+      cityData.splice(unknownIndex, 1);
+    }
+
+    const ctx = document.getElementById('myChart').getContext('2d');
+
+    if (chartInstanceRef.current) {
+      chartInstanceRef.current.destroy();
+    }
+
+    chartInstanceRef.current = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: cityLabels,
+        datasets: [{
+          label: 'Student Count',
+          data: cityData,
+          backgroundColor: '#6e2c6f',
+          borderColor: '#6e2c6f',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Student Demographics Chart'
           }
-        });
-      })
-      .catch(error => {
-        console.error('Error fetching second CSV file:', error);
-      });
-
-  }, []);  // This effect runs only once after the initial render
+        }
+      }
+    });
+  }, [demograph]);
 
   return (
     <div>
-      <h1>CSV Data from Multiple Files</h1>
-      <h2>Data from Student Demographics</h2>
-      {csvData1.length === 0 ? (
-        <p>Loading data...</p>
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              {Object.keys(csvData1[0]).map((key) => (
-                <th key={key}>{key}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {csvData1.map((row, index) => (
-              <tr key={index}>
-                {Object.values(row).map((value, idx) => (
-                  <td key={idx}>{value}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      {/* Display Data from CSV 2 */}
-      <h2>Data from Another CSV File</h2>
-      {csvData2.length === 0 ? (
-        <p>Loading data...</p>
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              {Object.keys(csvData2[0]).map((key) => (
-                <th key={key}>{key}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {csvData2.map((row, index) => (
-              <tr key={index}>
-                {Object.values(row).map((value, idx) => (
-                  <td key={idx}>{value}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      <div className="centerTitle"><h1>The Scholarship Academy - Key Insights for 2025</h1></div>
+      <canvas id="myChart" width="400" height="200"></canvas>
+      <button className="dataButton" onClick={() => router.push('/view-data')}>View Data</button>
     </div>
   );
 };
 
-export default MyChart;
+export default Home;
