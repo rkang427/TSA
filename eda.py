@@ -4,41 +4,43 @@ from transformers import pipeline
 
 sentiment_analyzer = pipeline("sentiment-analysis")
 
-df = pd.read_csv("data/full_data.csv", encoding='ISO-8859-1')
+df = pd.read_csv("data/cleaned_data.csv", encoding='ISO-8859-1')
+#
+# df = df.T
+#
+# sentiment = df.iloc[29:33]
+# sentiment.to_csv("data/sentiment_initial.csv")
 
-df = df.T
-
-sentiment = df.iloc[29:33]
-sentiment.to_csv("data/sentiment_initial.csv")
-
-def get_sentiment(text):
-    if pd.isna(text) or not text:
-        return None, None
-    result = sentiment_analyzer(text)
-    return result[0]['label'], result[0]['score']
-
-sentiment_labels = []
-sentiment_scores = []
-response = []
-for row in sentiment.itertuples(index=False):
-    sentiment_label_temp = []
-    sentiment_score_temp = []
-    for cell in row:
-        label, score = get_sentiment(str(cell))
-        sentiment_label_temp.append(label)
-        sentiment_score_temp.append(score)
-    sentiment_labels.append(sentiment_label_temp)
-    sentiment_scores.append(sentiment_score_temp)
-tmp = sentiment.T.columns
-sentiment_labels = sentiment_labels.T
-sentiment_scores = sentiment_scores.T
-sentiment_label_columns = [a + " Sentiment Label" for a in tmp]
-sentiment_score_columns = [a + " Score Label" for a in tmp]
-labels_df = pd.DataFrame(sentiment_labels, columns=sentiment_label_columns)
-scores_df = pd.DataFrame(sentiment_scores, columns=sentiment_score_columns)
-df = pd.concat([df, labels_df, scores_df], axis=1)
-print(df.shape)
-df.to_csv("data/sentiment_final.csv")
+# def get_sentiment(text):
+#     if pd.isna(text) or not text:
+#         return None, None
+#     result = sentiment_analyzer(text)
+#     return result[0]['label'], result[0]['score']
+#
+# sentiment_labels = []
+# sentiment_scores = []
+# response = []
+# for row in sentiment.itertuples(index=False):
+#     sentiment_label_temp = []
+#     sentiment_score_temp = []
+#     for cell in row:
+#         label, score = get_sentiment(str(cell))
+#         sentiment_label_temp.append(label)
+#         sentiment_score_temp.append(score)
+#     sentiment_labels.append(sentiment_label_temp)
+#     sentiment_scores.append(sentiment_score_temp)
+# tmp = sentiment.T.columns
+# print(len(sentiment_labels))
+# sentiment_labels = list(zip(*sentiment_labels))
+# sentiment_scores = list(zip(*sentiment_scores))
+# print(len(sentiment_labels))
+# sentiment_label_columns = [a + " Sentiment Label" for a in tmp]
+# sentiment_score_columns = [a + " Score Label" for a in tmp]
+# labels_df = pd.DataFrame(sentiment_labels, columns=sentiment_label_columns)
+# scores_df = pd.DataFrame(sentiment_scores, columns=sentiment_score_columns)
+# df = pd.concat([df, labels_df, scores_df], axis=1)
+# print(df.shape)
+# df.to_csv("data/sentiment_final.csv")
 
 
 
