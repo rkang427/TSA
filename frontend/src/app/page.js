@@ -51,7 +51,7 @@ function GenderDistributionTable({ countyFreq }) {
   };
 
   return (
-      <table border="1" style={{width: '100%', marginTop: '20px', borderCollapse: 'collapse'
+      <table border="1" style={{width: '100%', marginTop: '15px', borderCollapse: 'collapse'
       , color: 'rgb(110, 44, 111)'}}>
         <thead>
         <tr>
@@ -63,9 +63,9 @@ function GenderDistributionTable({ countyFreq }) {
         <tbody>
         {countyFreq.map((countyData) => (
             <tr key={countyData.county}>
-              <td style={{ paddingLeft: '45px' }}>{countyData.county}</td>
-              <td style={{ paddingLeft: '45px' }}>{countyData.count}</td>
-              <td style={{ paddingLeft: '45px' }}>{renderGenderBar(countyData.gender)}</td>
+              <td style={{ paddingLeft: '65px' }}>{countyData.county}</td>
+              <td style={{ paddingLeft: '50px' }}>{countyData.count}</td>
+              <td style={{ paddingLeft: '55px' }}>{renderGenderBar(countyData.gender)}</td>
             </tr>
         ))}
         </tbody>
@@ -498,7 +498,7 @@ map.on('pointermove', (event) => {
           </button>
         </div>
         <div style={{display: 'flex', flexDirection: 'row', width: '100%'}}>
-          <div style={{width: '70%', padding: '1rem'}}>
+          <div style={{width: '60%'}}>
             <div
                 ref={mapRef}
                 style={{
@@ -510,8 +510,8 @@ map.on('pointermove', (event) => {
           </div>
 
          {showGenderTable && (
-        <div>
-          <h3 className='graphTitle'>
+        <div style={{border: '3px solid rgb(201, 176, 22)', width: '40%', padding: '1rem'}}>
+          <h3 className='graphTitle' >
             Top 7 Counties with Highest Participation
           </h3>
           <GenderDistributionTable countyFreq={countyFreq} />
