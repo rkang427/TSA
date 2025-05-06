@@ -15,6 +15,64 @@ import VectorSource from 'ol/source/Vector';
 import { fromLonLat } from 'ol/proj';
 import { useRouter } from 'next/navigation';
 
+function GenderDistributionTable({ countyFreq }) {
+  const renderGenderBar = (genderData) => {
+    const total = Object.values(genderData).reduce((acc, count) => acc + count, 0);
+    return (
+      <div style={{ display: 'flex', width: '105px' ,
+      border: '3px solid rgb(110, 44, 111)' }}>
+        {Object.entries(genderData).map(([gender, count]) => {
+          const percentage = (count / total) * 100;
+          const color = gender === 'Male' ? 'rgb(201, 176, 22)' : gender === 'Female' ? 'rgb(110, 44, 111)' : 'white';
+          return (
+              <div
+                  key={gender}
+                  style={{
+                    backgroundColor: color,
+                    width: `${percentage}%`,
+                    height: '100%',
+                    position: 'relative',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '12px',
+                    color: 'white',
+                    paddingLeft: '4px'
+                  }}
+              >
+                {percentage >= 15 && (
+                    <span>{gender} ({Math.round(percentage)}%)</span>
+                )}
+              </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  return (
+      <table border="1" style={{width: '100%', marginTop: '20px', borderCollapse: 'collapse'
+      , color: 'rgb(110, 44, 111)'}}>
+        <thead>
+        <tr>
+          <th>County</th>
+          <th>Count</th>
+          <th>Gender Distribution</th>
+        </tr>
+        </thead>
+        <tbody>
+        {countyFreq.map((countyData) => (
+            <tr key={countyData.county}>
+              <td style={{ paddingLeft: '45px' }}>{countyData.county}</td>
+              <td style={{ paddingLeft: '45px' }}>{countyData.count}</td>
+              <td style={{ paddingLeft: '45px' }}>{renderGenderBar(countyData.gender)}</td>
+            </tr>
+        ))}
+        </tbody>
+      </table>
+  );
+}
+
 const Home = () => {
   const [demograph, setDemograph] = useState([]);
   const [hoveredFeature, setHoveredFeature] = useState(null);
@@ -27,8 +85,12 @@ const Home = () => {
   const cityChartInstanceRef = useRef(null);
   const router = useRouter();
   const beforeAfterChartRef = useRef(null);
+  const [showGenderTable, setShowGenderTable] = useState(true);
+  const [countyFreq, setCountyFreq] = useState([]);
 
-
+  const handleFirstGraphClick = () => {
+    setShowGenderTable(!showGenderTable);
+  };
   useEffect(() => {
     fetch('/student_demographics.csv')
       .then(response => response.text())
@@ -58,6 +120,35 @@ const Home = () => {
       })
       .catch(error => console.error('Error fetching CSV:', error));
   }, []);
+
+  useEffect(() => {
+    if (!demograph.length) return;
+
+    const countyData = demograph.reduce((acc, curr) => {
+      const county = curr['County of Residence'];
+      const gender = curr['Gender'];
+
+      if (county && county !== 'Unknown') {
+        if (!acc[county]) {
+          acc[county] = { count: 1, gender: {} };
+        } else {
+          acc[county].count += 1;
+        }
+
+        if (gender && gender !== 'Unknown') {
+          acc[county].gender[gender] = (acc[county].gender[gender] || 0) + 1;
+        }
+      }
+      return acc;
+    }, {});
+
+    const sortedCountyFreq = Object.entries(countyData)
+      .map(([county, data]) => ({ county, ...data }))
+      .sort((a, b) => b.count - a.count);
+
+    setCountyFreq(sortedCountyFreq.slice(0, 7));
+  }, [demograph]);
+
 
 useEffect(() => {
   if (!beforeAfterData.length) return;
@@ -96,73 +187,76 @@ useEffect(() => {
     "After this session, how confident are you in your ability to submit the FAFSA?": 'Confidence in Submitting FAFSA'
   };
 
-  const calculateAverage = (data, questionKey) => {
-    const total = data
-      .map(row => parseInt(row[questionKey] || 0, 10))
-      .reduce((a, b) => a + b, 0);
-
-    const count = data.filter(row => row[questionKey]).length;
-
-    return count > 0 ? total / count : 0;
-  };
 
   const beforeData = [];
   const afterData = [];
 
-  questions.forEach((question, d) => {
-    const beforeKey = question;
-    const afterKey = question.replace('Before', 'After');
 
-    const beforeAverage = calculateAverage(beforeAfterData, beforeKey);
-    const afterAverage = calculateAverage(beforeAfterData, afterKey);
-    if (d % 2 === 0) { beforeData.push(beforeAverage); }
-    else { afterData.push(afterAverage); }
-  });
+  const calculateAverage = (data, questionKey) => {
+      const total = data
+        .map(row => parseInt(row[questionKey] || 0, 10))
+        .reduce((a, b) => a + b, 0);
+      const count = data.filter(row => row[questionKey]).length;
+      return count > 0 ? total / count : 0;
+    };
 
-  const chartLabels = questions.filter((_, x) => x % 2 == 0).map(
-      (question, x) =>questionKeywords[question]);
+    questions.forEach((question, d) => {
+      const beforeKey = question;
+      const afterKey = question.replace('Before', 'After');
 
-  if (beforeAfterChartRef.current) {
-    if (beforeAfterChartRef.current.chartInstance) {
-      beforeAfterChartRef.current.chartInstance.destroy();
-    }
-
-    const ctx = beforeAfterChartRef.current.getContext('2d');
-
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: chartLabels,
-        datasets: [
-          {
-            label: 'Before Session',
-            data: beforeData,
-            backgroundColor: 'rgba(201, 176, 22, 0.2)',
-            borderColor: 'rgb(201, 176, 22)',
-            borderWidth: 1
-          },
-          {
-            label: 'After Session',
-            data: afterData,
-            backgroundColor: 'rgb(110, 44, 111, 0.2)',
-            borderColor: 'rgb(110, 44, 111)',
-            borderWidth: 1
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          title: { display: true, text: 'Before and After Confidence Comparison' },
-          legend: { position: 'top' },
-        },
-        scales: {
-          y: { beginAtZero: true }
-        }
-      }
+      const beforeAverage = calculateAverage(beforeAfterData, beforeKey);
+      const afterAverage = calculateAverage(beforeAfterData, afterKey);
+      if (d % 2 === 0) { beforeData.push(beforeAverage); }
+      else { afterData.push(afterAverage); }
     });
-  }
-}, [beforeAfterData]);
+
+    const chartLabels = questions.filter((_, x) => x % 2 === 0).map(
+      (question) => questionKeywords[question]);
+
+    if (beforeAfterChartRef.current) {
+      const ctx = beforeAfterChartRef.current.getContext('2d');
+
+      if (beforeAfterChartRef.current.chartInstance) {
+        beforeAfterChartRef.current.chartInstance.destroy();
+      }
+
+      const chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: chartLabels,
+          datasets: [
+            {
+              label: 'Before Session',
+              data: beforeData,
+              backgroundColor: 'rgba(201, 176, 22, 0.2)',
+              borderColor: 'rgb(201, 176, 22)',
+              borderWidth: 1
+            },
+            {
+              label: 'After Session',
+              data: afterData,
+              backgroundColor: 'rgb(110, 44, 111, 0.2)',
+              borderColor: 'rgb(110, 44, 111)',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            title: { display: true, text: 'Before and After Confidence Comparison' },
+            legend: { position: 'top' },
+          },
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+
+      beforeAfterChartRef.current.chartInstance = chartInstance;
+    }
+  }, [beforeAfterData]);
+
 
   useEffect(() => {
     if (!demograph.length) return;
@@ -238,7 +332,6 @@ useEffect(() => {
           }
         }
       }
-      // Create tooltip element
 const tooltipElement = document.createElement('div');
 tooltipElement.style.position = 'absolute';
 tooltipElement.style.background = 'rgb(201, 176, 22)';
@@ -282,6 +375,7 @@ map.on('pointermove', (event) => {
         const feature = map.forEachFeatureAtPixel(pixel, f => f);
 
         if (feature) {
+          handleFirstGraphClick();
           const zipCode = feature.get('zip');
           const city = demograph.find(item => item['Zip Code'] === zipCode)?.City || 'Unknown';
           const exitTicketData = demograph.filter(item => item['Zip Code'] === zipCode);
@@ -298,6 +392,7 @@ map.on('pointermove', (event) => {
 
           setHoveredFeature({ zipCode, city, exitTicketData, genderData, raceData });
         } else {
+          setShowGenderTable(true);
           setHoveredFeature(null);
         }
       });
@@ -350,8 +445,6 @@ map.on('pointermove', (event) => {
     renderChart(genderChartRef, Object.keys(genderData), Object.values(genderData));
     renderChart(raceChartRef, Object.keys(raceData), Object.values(raceData));
   }, [hoveredFeature]);
-
-  // Static city chart (right side)
   useEffect(() => {
     if (!demograph.length) return;
 
@@ -390,25 +483,40 @@ map.on('pointermove', (event) => {
     });
   }, [demograph]);
 
+
   return (
-
-
       <div style={{display: 'flex', flexDirection: 'column'}}>
         <div style={{position: 'absolute', top: '10px', left: '10px', zIndex: 1001}}>
           <img src="/logo.png" alt="Logo" style={{height: '60px'}}/>
         </div>
-        <div className='centerTitle'><h1>Key Insights for 2025</h1></div>
+        <div className="centerTitle">
+          <h1>Key Insights for 2025</h1>
+        </div>
         <div style={{marginTop: '1rem', color: 'rgb(110, 44, 111)'}}>
-          <button className="dataButton" onClick={() => router.push('/view-data')}>View Data</button>
+          <button className="dataButton" onClick={() => router.push('/view-data')}>
+            View Data
+          </button>
         </div>
         <div style={{display: 'flex', flexDirection: 'row', width: '100%'}}>
-
           <div style={{width: '70%', padding: '1rem'}}>
-            <div ref={mapRef} style={{
-              height: '400px', width: '100%', border: '3px solid rgb(201, 176, 22)'
-            }}></div>
-
+            <div
+                ref={mapRef}
+                style={{
+                  height: '400px',
+                  width: '100%',
+                  border: '3px solid rgb(201, 176, 22)',
+                }}
+            ></div>
           </div>
+
+         {showGenderTable && (
+        <div>
+          <h3 className='graphTitle'>
+            Top 7 Counties by Frequency with Gender Distribution
+          </h3>
+          <GenderDistributionTable countyFreq={countyFreq} />
+        </div>
+      )}
 
           {hoveredFeature && (
               <div style={{width: '80%', padding: '1rem'}}>
@@ -422,19 +530,22 @@ map.on('pointermove', (event) => {
           )}
         </div>
 
-        <div style={{width: '100%', padding: '1rem', border: '3px solid rgb(201, 176, 22)'}}>
-          <div className='graphTitle'>
-            <h3>Student Demographics by City</h3></div>
-          <canvas id="cityChart" width="800" height="300"></canvas>
-
-        </div>
-
-        <div style={{width: '100%', padding: '1rem', border: '3px solid rgb(201, 176, 22)'}}>
-          <div className='graphTitle'>
-            <h3>Before and After Confidence Comparison</h3>
+        <div style={{display: 'flex', justifyContent: 'space-between', width: '100%', height: '100%'}}>
+          <div style={{width: '50%', padding: '1rem', border: '3px solid rgb(201, 176, 22)'}}>
+            <div className='graphTitle'>
+              <h3>Student Demographics by City</h3>
+            </div>
+            <canvas id="cityChart" width="100%" height="100%"></canvas>
           </div>
-          <canvas ref={beforeAfterChartRef} width="800" height="300"/>
+
+          <div style={{width: '50%', padding: '1rem', border: '3px solid rgb(201, 176, 22)'}}>
+            <div className='graphTitle'>
+              <h3>Before and After Confidence Comparison</h3>
+            </div>
+            <canvas ref={beforeAfterChartRef} width="100%" height="100%"/>
+          </div>
         </div>
+
       </div>
   );
 
