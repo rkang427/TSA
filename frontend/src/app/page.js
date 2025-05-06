@@ -512,7 +512,7 @@ map.on('pointermove', (event) => {
          {showGenderTable && (
         <div>
           <h3 className='graphTitle'>
-            Top 7 Counties by Frequency with Gender Distribution
+            Top 7 Counties with Highest Participation
           </h3>
           <GenderDistributionTable countyFreq={countyFreq} />
         </div>
