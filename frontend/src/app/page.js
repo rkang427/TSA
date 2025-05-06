@@ -119,7 +119,8 @@ useEffect(() => {
     else { afterData.push(afterAverage); }
   });
 
-  const chartLabels = questions.map(question => questionKeywords[question] || question.split('?')[0]);
+  const chartLabels = questions.filter((_, x) => x % 2 == 0).map(
+      (question, x) =>questionKeywords[question]);
 
   if (beforeAfterChartRef.current) {
     if (beforeAfterChartRef.current.chartInstance) {
@@ -402,15 +403,15 @@ map.on('pointermove', (event) => {
         </div>
         <div style={{display: 'flex', flexDirection: 'row', width: '100%'}}>
 
-          <div style={{width: '50%', padding: '1rem'}}>
+          <div style={{width: '70%', padding: '1rem'}}>
             <div ref={mapRef} style={{
-              height: '400px', width: '100%', border: '3px solid rgb(201, 176, 22)', // Golden color to match your theme
-              borderRadius: '6px'
+              height: '400px', width: '100%', border: '3px solid rgb(201, 176, 22)'
             }}></div>
+
           </div>
 
           {hoveredFeature && (
-              <div style={{width: '50%', padding: '1rem'}}>
+              <div style={{width: '80%', padding: '1rem'}}>
                 <div className='graphTitle'>
                   <h3>Exit Ticket Count for {hoveredFeature.zipCode} ({hoveredFeature.city})</h3>
                 </div>
@@ -421,14 +422,14 @@ map.on('pointermove', (event) => {
           )}
         </div>
 
-        <div style={{width: '100%', padding: '1rem'}}>
+        <div style={{width: '100%', padding: '1rem', border: '3px solid rgb(201, 176, 22)'}}>
           <div className='graphTitle'>
             <h3>Student Demographics by City</h3></div>
           <canvas id="cityChart" width="800" height="300"></canvas>
 
         </div>
 
-        <div style={{width: '100%', padding: '1rem'}}>
+        <div style={{width: '100%', padding: '1rem', border: '3px solid rgb(201, 176, 22)'}}>
           <div className='graphTitle'>
             <h3>Before and After Confidence Comparison</h3>
           </div>
