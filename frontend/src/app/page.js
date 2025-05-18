@@ -23,6 +23,8 @@ const Home = () => {
   const semanticsLabels = useCSVData('/sem_sentiment.csv');
   const semanticsScores = useCSVData('/sem_sentiment_score.csv');
   const [hoveredFeature, setHoveredFeature] = useState(null);
+  const [showChart, setShowChart] = useState(false);
+
 
   const exitTicketChartRef = useRef(null);
   const router = useRouter();
@@ -236,18 +238,40 @@ const Home = () => {
 
 
   return (
-       <div style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
-      <div style={{ position: 'absolute', top: '30px', left: '30px', zIndex: 1001 }}>
-        <img src="/logo.png" alt="Logo" style={{ height: '60px' }} />
-      </div>
+      <div style={{display: 'flex', flexDirection: 'column', position: 'relative'}}>
+        <div style={{position: 'absolute', top: '30px', left: '30px', zIndex: 1001}}>
+          <img src="/logo.png" alt="Logo" style={{height: '60px'}}/>
+        </div>
 
-         <div style={{marginTop: '80px', padding: '20px'}}>
-           <h1>How Much?</h1>
-           <HowMuchChart data={howMuchDataCity}/>
-         </div>
+        <div style={{marginTop: '80px', padding: '20px',display: 'flex'}}>
+          <h1>How Much?</h1>
+          <button
+              onClick={() => setShowChart(prev => !prev)}
+              style={{
+                marginBottom: '20px',
+                marginLeft: '20px',
+                marginTop: '25px',
+                height: '40px',
+                padding: '10px 10px',
+                backgroundColor: '#c9b016',
+                color: '#6e2c6f',
+                border: 'none',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                fontWeight: 'bold'
+              }}
+          >
+            {showChart ? 'Less Information' : 'More Info'}
+          </button>
+
+        </div>
+
+          {showChart && (
+              <HowMuchChart data={howMuchDataCity}/>
+          )}
 
 
-         {/* old code - uncomment if not running well */}
+        {/* old code - uncomment if not running well */}
         {/*<div style={{marginTop: '1rem', color: 'rgb(110, 44, 111)'}}>*/}
         {/*  <button className="dataButton" onClick={() => router.push('/view-data')}>*/}
         {/*    View Data*/}
