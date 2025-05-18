@@ -35,6 +35,7 @@ const Home = () => {
   const [howMuchDataCity, setHowMuchDataCity] = useState({});
 
 
+  // PILLAR 1 - HOW MUCH //
   //for HowMuchChart.js
   useEffect(() => {
   if (!demograph.length) return;
@@ -106,6 +107,7 @@ const Home = () => {
 
 }, [demograph]);
 
+  // high school aggregated
   useEffect(() => {
   if (!demograph.length) return;
 
@@ -118,6 +120,7 @@ const Home = () => {
         count: 0,
         gender: {},
         grade: {},
+        county: {},
         race: {},
         date: {}
       };
@@ -134,12 +137,22 @@ const Home = () => {
 
     updateField('gender', curr['Gender']);
     updateField('grade', curr['Grade Level']);
+    updateField('county', curr['County of Residence']);
     updateField('race', curr['Race/Ethnicity']);
-
     const date = curr['Submission Date'];
-    if (date && date !== 'Unknown') {
-      school.date[date] = (school.date[date] || 0) + 1;
+  const ticket = curr['Exit Ticket Name'];
+
+  if (date && date !== 'Unknown') {
+    if (!school.date[date]) {
+      school.date[date] = { count: 0, tickets: [] };
     }
+    school.date[date].count += 1;
+
+    if (ticket && ticket !== 'Unknown') {
+      school.date[date].tickets.push(ticket);
+    }
+  }
+
 
     return acc;
   }, {});
@@ -152,9 +165,8 @@ const Home = () => {
     }));
   setHowMuchDataCity(sortedBySchoolName);
 
-
 }, [demograph]);
-
+console.log(howMuchDataCity);
 
   // old code - uncomment if not running well
   //for top 7 counties
