@@ -23,7 +23,9 @@ const Home = () => {
   const semanticsLabels = useCSVData('/sem_sentiment.csv');
   const semanticsScores = useCSVData('/sem_sentiment_score.csv');
   const [hoveredFeature, setHoveredFeature] = useState(null);
-  const [showChart, setShowChart] = useState(false);
+  const [showChart1, setShowChart1] = useState(false);
+  const [showChart2, setShowChart2] = useState(false);
+  const [showChart3, setShowChart3] = useState(false);
 
 
   const exitTicketChartRef = useRef(null);
@@ -243,10 +245,10 @@ const Home = () => {
           <img src="/logo.png" alt="Logo" style={{height: '60px'}}/>
         </div>
 
-        <div style={{marginTop: '80px', padding: '20px',display: 'flex'}}>
+        <div style={{marginTop: '80px', padding: '20px', display: 'flex'}}>
           <h1>How Much?</h1>
           <button
-              onClick={() => setShowChart(prev => !prev)}
+              onClick={() => setShowChart1(prev => !prev)}
               style={{
                 marginBottom: '20px',
                 marginLeft: '20px',
@@ -261,14 +263,41 @@ const Home = () => {
                 fontWeight: 'bold'
               }}
           >
-            {showChart ? 'Less Information' : 'More Info'}
+            {showChart1 ? 'Less Information' : 'More Info'}
           </button>
 
         </div>
 
-          {showChart && (
-              <HowMuchChart data={howMuchDataCity}/>
-          )}
+        {showChart1 && (
+            <HowMuchChart data={howMuchDataCity}/>
+        )}
+
+        <div style={{marginTop: '80px', padding: '20px', display: 'flex'}}>
+          <h1>How Well?</h1>
+          <button
+              onClick={() => setShowChart2(prev => !prev)}
+              style={{
+                marginBottom: '20px',
+                marginLeft: '20px',
+                marginTop: '25px',
+                height: '40px',
+                padding: '10px 10px',
+                backgroundColor: '#c9b016',
+                color: '#6e2c6f',
+                border: 'none',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                fontWeight: 'bold'
+              }}
+          >
+            {showChart2 ? 'Less Information' : 'More Info'}
+          </button>
+
+        </div>
+
+        {/*  {showChart2 && (*/}
+        {/*    <BeforeAfterChart beforeAfterData={beforeAfterData}/>*/}
+        {/*)}*/}
 
 
         {/* old code - uncomment if not running well */}
