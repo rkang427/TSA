@@ -166,7 +166,6 @@ const Home = () => {
   setHowMuchDataCity(sortedBySchoolName);
 
 }, [demograph]);
-console.log(howMuchDataCity);
 
   // old code - uncomment if not running well
   //for top 7 counties
