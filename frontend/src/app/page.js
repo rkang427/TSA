@@ -11,7 +11,7 @@ import TopCountyGenderChart from '@/components/TopCountyGenderChart';
 import MapChart from '@/components/MapChart';
 import ExitTicketChart from '@/components/ExitTicketChart';
 import CityDemographicsChart from '@/components/CityDemographicsChart';
-
+import HowMuchChart from '@/components/howMuchChart'
 import useCSVData from '@/hooks/useCSVData';
 
 
@@ -76,7 +76,6 @@ const Home = () => {
       if (ref.current.chartInstance) {
         ref.current.chartInstance.destroy();
       }
-
       const ctx = ref.current.getContext('2d', { willReadFrequently: true });
       ref.current.chartInstance = new Chart(ctx, {
         type: 'bar',
@@ -97,46 +96,43 @@ const Home = () => {
 
   return (
       <div style={{display: 'flex', flexDirection: 'column'}}>
-        <div style={{position: 'absolute', top: '10px', left: '10px', zIndex: 1001}}>
+        <div style={{position: 'absolute', top: '30px', left: '30px', zIndex: 1001}}>
           <img src="/logo.png" alt="Logo" style={{height: '60px'}}/>
         </div>
-        <div className="centerTitle">
-          <h1>Key Insights for 2025</h1>
-        </div>
-        <div style={{marginTop: '1rem', color: 'rgb(110, 44, 111)'}}>
-          <button className="dataButton" onClick={() => router.push('/view-data')}>
-            View Data
-          </button>
-        </div>
-        <div style={{display: 'flex', flexDirection: 'row', width: '100%'}}>
-          <div style={{width: '60%'}}>
-            <MapChart onFeatureClick={setHoveredFeature} demograph={demograph} />
-          </div>
+        {/*<div style={{marginTop: '1rem', color: 'rgb(110, 44, 111)'}}>*/}
+        {/*  <button className="dataButton" onClick={() => router.push('/view-data')}>*/}
+        {/*    View Data*/}
+        {/*  </button>*/}
+        {/*</div>*/}
+        {/*<div style={{display: 'flex', flexDirection: 'row', width: '100%'}}>*/}
+        {/*  <div style={{width: '60%'}}>*/}
+        {/*    <MapChart onFeatureClick={setHoveredFeature} demograph={demograph} />*/}
+        {/*  </div>*/}
 
-         {showGenderTable && (
-        <div style={{border: '3px solid rgb(201, 176, 22)', width: '40%', padding: '1rem'}}>
-          <h3 className='graphTitle' >
-            Top 7 Counties with Highest Participation
-          </h3>
-          <TopCountyGenderChart countyFreq={countyFreq} />
-        </div>
-      )}
+        {/* {showGenderTable && (*/}
+        {/*<div style={{border: '3px solid rgb(201, 176, 22)', width: '40%', padding: '1rem'}}>*/}
+        {/*  <h3 className='graphTitle' >*/}
+        {/*    Top 7 Counties with Highest Participation*/}
+        {/*  </h3>*/}
+        {/*  <TopCountyGenderChart countyFreq={countyFreq} />*/}
+        {/*</div>*/}
+      {/*)}*/}
 
-          {hoveredFeature && (
-              <div style={{width: '80%', padding: '1rem'}}>
-                <div className='graphTitle'>
-                  <h3>Exit Ticket Count for {hoveredFeature.zipCode} ({hoveredFeature.city})</h3>
-                </div>
-                  <ExitTicketChart data={hoveredFeature.exitTicketData} />
-              </div>
-          )}
-        </div>
+      {/*    {hoveredFeature && (*/}
+      {/*        <div style={{width: '80%', padding: '1rem'}}>*/}
+      {/*          <div className='graphTitle'>*/}
+      {/*            <h3>Exit Ticket Count for {hoveredFeature.zipCode} ({hoveredFeature.city})</h3>*/}
+      {/*          </div>*/}
+      {/*            <ExitTicketChart data={hoveredFeature.exitTicketData} />*/}
+      {/*        </div>*/}
+      {/*    )}*/}
+      {/*  </div>*/}
 
-        <div style={{display: 'flex', justifyContent: 'space-between', width: '100%', height: '100%'}}>
-            <CityDemographicsChart demograph={demograph}/>
+      {/*  <div style={{display: 'flex', justifyContent: 'space-between', width: '100%', height: '100%'}}>*/}
+      {/*      <CityDemographicsChart demograph={demograph}/>*/}
 
-            <BeforeAfterChart beforeAfterData={beforeAfterData} />
-        </div>
+      {/*      <BeforeAfterChart beforeAfterData={beforeAfterData} />*/}
+      {/*  </div>*/}
 
       </div>
   );
