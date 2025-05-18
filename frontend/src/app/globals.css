@@ -1,57 +1,59 @@
-@import "tailwindcss";
-/* for the csv file data */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
 
-
-.centerTitle {
-    text-align: center;
-    vertical-align: middle;
-    font-size: 40px;
-    font-family: Helvetica, sans-serif;
-    font-weight: bold;
-    color: rgb(110, 44, 111);
-    }
-.graphTitle {
-    text-align: center;
-    vertical-align: middle;
-    font-size: 20px;
-    font-family: Helvetica, sans-serif;
-    font-weight: bold;
-    color: rgb(110, 44, 111);
-    }
-.center {
-    text-align: center;
-    vertical-align: middle;
-    font-size: 20px;
-    }
-
-.dataButton{
-    text-align: right;
-    vertical-align: middle;
-    font-size: 20px;
-    font-family: Roboto, sans-serif;
-    float: right;
-}
+/* Root Variables */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #000000; /* Always black */
+  --foreground: #ededed;
+  --font-sans: 'Nunito', sans-serif;
+  --font-mono: 'Nunito', monospace; /* You can change this to any specific mono font if needed */
 }
 
+/* Theme (inline variables if used with Tailwind's inline theming) */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* Base Styles */
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Helvetica, sans-serif;
+  font-family: var(--font-sans);
+}
+
+/* Typography & Layout */
+.centerTitle {
+  text-align: center;
+  vertical-align: middle;
+  font-size: 2.5rem; /* 40px */
+  font-weight: bold;
+  font-family: var(--font-sans);
+  color: rgb(110, 44, 111);
+}
+
+.graphTitle {
+  text-align: center;
+  vertical-align: middle;
+  font-size: 1.25rem; /* 20px */
+  font-weight: bold;
+  font-family: var(--font-sans);
+  color: rgb(110, 44, 111);
+}
+
+.center {
+  text-align: center;
+  vertical-align: middle;
+  font-size: 1.25rem; /* 20px */
+  font-family: var(--font-sans);
+}
+
+/* Buttons */
+.dataButton {
+  float: right;
+  text-align: right;
+  vertical-align: middle;
+  font-size: 1.25rem; /* 20px */
+  font-family: var(--font-sans);
 }
