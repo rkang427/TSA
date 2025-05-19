@@ -13,11 +13,12 @@ import ExitTicketChart from '@/components/ExitTicketChart';
 import CityDemographicsChart from '@/components/CityDemographicsChart';
 import HowMuchChart from '@/components/HowMuchChart'
 import useCSVData from '@/hooks/useCSVData';
+import HowWellChart from "@/components/HowWellChart";
 
 
 
 const Home = () => {
-  const demograph = useCSVData('/student_demographics.csv');
+  const demograph = useCSVData('/cleaned_data_with_sem.csv');
   const beforeAfterData = useCSVData('/before_and_after.csv');
   const semanticsData = useCSVData('/semantics.csv');
   const semanticsLabels = useCSVData('/sem_sentiment.csv');
@@ -35,8 +36,11 @@ const Home = () => {
 
   //   NEW DESIGN STARTING HERE   //
   //for HowMuchChart.js
-  const [howMuchData, setHowMuchData] = useState({});
   const [howMuchDataCity, setHowMuchDataCity] = useState({});
+  const [howMuchData, setHowMuchData] = useState({});
+
+
+  const [howWellData, setHowWellData] = useState({});
 
 
   // PILLAR 1 - HOW MUCH //
@@ -171,6 +175,104 @@ const Home = () => {
 
 }, [demograph]);
 
+
+  useEffect(() => {
+  if (!demograph.length) return;
+
+  const confidenceMetrics = [
+    {
+      key: 'confidence_pay',
+      label: 'Confidence in ability to pay for college',
+      beforeKey: 'Before this session, how confident were you in your ability to pay for college?',
+      afterKey: 'After this session, how confident are you in your ability to pay for college?'
+    },
+    {
+      key: 'confidence_research',
+      label: 'Confidence in researching scholarships',
+      beforeKey: 'Before this session, how confident were you in your ability to research scholarships that are the best fit for you?',
+      afterKey: 'After this session, how confident are you in your ability to research scholarships that are the best fit for you?'
+    },
+    {
+      key: 'confidence_essay',
+      label: 'Confidence in writing essays',
+      beforeKey: 'Before this session, how would you rate your  confidence  in your ability to write competitive scholarship essays?',
+      afterKey: 'After this session, how would you rate your confidence in your ability to write competitive scholarship essays?'
+    },
+    {
+      key: 'confidence_appeal',
+      label: 'Confidence in submitting a Financial Aid Appeal',
+      beforeKey: 'Before this session, how confident are you in your ability to submit a Financial Aid Appeal?',
+      afterKey: 'After this session, how confident are you in your ability to submit a Financial Aid Appeal?'
+    },
+    {
+      key: 'confidence_award_letter',
+      label: 'Confidence in understanding Financial Aid Award Letter',
+      beforeKey: 'Before this session, how confident were you in your ability to understand a Financial Aid Award Letter?',
+      afterKey: 'After this session, how confident are you in your ability to understand a Financial Aid Award Letter?'
+    },
+    {
+      key: 'confidence_fafsa',
+      label: 'Confidence in submitting FAFSA',
+      beforeKey: 'Before this session, how confident were you in your ability to submit the FAFSA?',
+      afterKey: 'After this session, how confident are you in your ability to submit the FAFSA?'
+    },
+  ];
+
+  const confidenceDataBySchool = demograph.reduce((acc, curr) => {
+    const schoolName = curr['School Name'];
+    if (!schoolName || schoolName === 'Unknown') return acc;
+
+    if (!acc[schoolName]) {
+      acc[schoolName] = {
+        count: 0,
+        metrics: {}
+      };
+
+      confidenceMetrics.forEach(({ key }) => {
+        acc[schoolName].metrics[key] = { before: [], after: [] };
+      });
+    }
+
+    acc[schoolName].count += 1;
+
+    confidenceMetrics.forEach(({ key, beforeKey, afterKey }) => {
+      const before = parseFloat(curr[beforeKey]);
+      const after = parseFloat(curr[afterKey]);
+
+      if (!isNaN(before)) acc[schoolName].metrics[key].before.push(before);
+      if (!isNaN(after)) acc[schoolName].metrics[key].after.push(after);
+    });
+
+    return acc;
+  }, {});
+
+  const processedData = Object.entries(confidenceDataBySchool).map(([schoolName, data]) => {
+    const metrics = {};
+
+    confidenceMetrics.forEach(({ key, label }) => {
+      const beforeVals = data.metrics[key].before;
+      const afterVals = data.metrics[key].after;
+
+      const avg = arr => arr.length ? (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(2) : '0.00';
+
+      metrics[key] = {
+        label,
+        beforeAvg: avg(beforeVals),
+        afterAvg: avg(afterVals)
+      };
+    });
+
+    return {
+      schoolName,
+      count: data.count,
+      confidenceMetrics: metrics
+    };
+  });
+
+  setHowWellData(processedData);
+}, [demograph]);
+
+
   // old code - uncomment if not running well
   //for top 7 counties
   // useEffect(() => {
@@ -295,9 +397,9 @@ const Home = () => {
 
         </div>
 
-        {/*  {showChart2 && (*/}
-        {/*    <BeforeAfterChart beforeAfterData={beforeAfterData}/>*/}
-        {/*)}*/}
+          {showChart2 && (
+            <HowWellChart demograph={howWellData}/>
+        )}
 
 
         {/* old code - uncomment if not running well */}
