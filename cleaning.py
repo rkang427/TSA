@@ -1,9 +1,11 @@
 import pandas as pd
 import numpy as np
+import openpyxl
 import matplotlib.pyplot as plt
 import scipy.stats as stats
 import seaborn as sns
 import ast
+import redivis
 import re
 # df = pd.read_csv('data/full_data.csv', encoding='latin1')
 # df_types = pd.read_csv('data/total_value_types.csv')
@@ -771,6 +773,12 @@ georgia_counties = {
 }
 
 
+def is_valid_zip(zip_code):
+    if zip_code is np.nan:
+        return False
+    zip_pattern = re.compile(r"^\d{5}(-\d{4})?$")
+    return bool(zip_pattern.match(zip_code))
+
 # def normalize_location(loc):
 #     loc = loc.strip().lower()
 #     loc = re.sub(r'[^a-z\s]', '', loc)
@@ -827,28 +835,18 @@ georgia_counties = {
 #             if county.lower() in loc:
 #                 return county
 #         return 'Unknown'
+
+# zipcodes =[7107, 11550, 20014, 20034, 20035, 20088, 20236, 30000, 30002, 30004, 30005, 30008, 30009, 30011, 30012, 30013, 30014, 30016, 30017, 30019, 30021, 30022, 30024, 30027, 30030, 30031, 30032, 30033, 30034, 30035, 30036, 30037, 30038, 30039, 30040, 30041, 30043, 30044, 30045, 30046, 30047, 30052, 30053, 30058, 30060, 30062, 30063, 30064, 30066, 30067, 30068, 30071, 30075, 30076, 30078, 30079, 30080, 30081, 30082, 30083, 30084, 30087, 30088, 30092, 30093, 30094, 30096, 30097, 30101, 30102, 30106, 30114, 30115, 30118, 30122, 30123, 30126, 30127, 30132, 30134, 30135, 30138, 30141, 30144, 30152, 30154, 30168, 30180, 30189, 30204, 30212, 30213, 30214, 30215, 30228, 30236, 30238, 30239, 30247, 30248, 30249, 30252, 30253, 30256, 30260, 30263, 30265, 30268, 30269, 30272, 30273, 30274, 30281, 30283, 30288, 30290, 30291, 30294, 30295, 30296, 30297, 30299, 30303, 30305, 30306, 30307, 30310, 30311, 30312, 30313, 30314, 30315, 30316, 30317, 30318, 30319, 30321, 30324, 30325, 30327, 30328, 30329, 30331, 30333, 30337, 30338, 30339, 30340, 30341, 30344, 30345, 30347, 30348, 30349, 30350, 30354, 30360, 30363, 30368, 30372, 30375, 30391, 30392, 30394, 30396, 30398, 30429, 30458, 30501, 30518, 30519, 30548, 30600, 30609, 30653, 30656, 30690, 30724, 30736, 30926, 30964, 30987, 31030, 31063, 31069, 31088, 31204, 31210, 31250, 31313, 31322, 31324, 31401, 31405, 31408, 31415, 31419, 31601, 31698, 31705, 31721, 31763, 31792, 31903, 31907, 32208, 32218, 32658, 32907, 33428, 36606, 39349, 39835, 40087, 40349, 60060, 78213, 30032, 30038, 30038, 30068, 30034, 30058, 30032, 30067, 30092, 30349, 30236, 30260, 30331]
+
 if __name__ == "__main__":
-    df = pd.read_csv('data/cleaned_data.csv')
-    df = df.iloc[:, 3:]
-    print(df.columns[29:33])
-    # tmp = df["School Name"]
-    # dct = {}
-    # for i in tmp:
-    #     if i is np.nan:
-    #         continue
-    #     s = i.replace("Unknown", " ")
-    #     if i is not np.nan and len(i) > 0 and "high" not in i.lower():
-    #         s = s + " High"
-    #     if s.strip().lower() == 'high':
-    #         s = "Unknown"
-    #     dct[i] = s
-    # df["School Name"] = df["School Name"].replace(dct)
-    # df["County of Residence"] = df["County of Residence"].replace({"United States": "Unknown", "The United States ": "Unknown"})
-    # cleaned_locations = []
+    # user = redivis.user("stanfordphs")
+    # dataset = user.dataset("us_zip_codes_to_longitude_and_latitude:d5sz:v1_1")
+    # table = dataset.table("us_zip_codes_to_longitude_and_latitude:j864")
     #
-    # for a in df["County of Residence"]:
-    #     norm = normalize_location(a)
-    #     cleaned_locations.append(norm)
-    # df["County of Residence"] = cleaned_locations
-    df.drop(df.columns[29:33], axis = 1).to_csv('data/student_demographics.csv')
-    df.iloc[:, 29:33].to_csv('data/semantics.csv')
+    # df = table.to_pandas_dataframe()
+    # df = df[df['Zip'].isin(zipcodes)]
+    # df.to_csv('data/georgia_longitude_and_latitude.csv')
+    # print(df.head())
+    df = pd.read_csv('data/semantics.csv')
+
+    print(df.head())

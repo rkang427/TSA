@@ -1,4 +1,4 @@
-,geopoint,Daylight_savings_time_flag,Timezone,Longitude,Latitude,State,City,Zip
+id,geopoint,Daylight_savings_time_flag,Timezone,Longitude,Latitude,State,City,Zip
 792,"38.893311,-77.014647",1,-5,-77.014647,38.893311,DC,Washington,20035
 936,"38.893311,-77.014647",1,-5,-77.014647,38.893311,DC,Washington,20088
 1102,"30.449096,-81.65651",1,-5,-81.65651,30.449096,FL,Jacksonville,32218
