@@ -14,6 +14,10 @@ const HowMuchChart = ({ data }) => {
   const [grade, setGrade] = useState(null);
   const [county, setCounty] = useState(null);
 
+  const [showExitTicketTable, setShowExitTicketTable] = useState(true);
+  const [showTimelineDetails, setShowTimelineDetails] = useState(true);
+
+
   const [selectedTicket, setSelectedTicket] = useState('All Tickets');
   const [allTickets, setAllTickets] = useState([]); // To store all unique ticket names
 
@@ -465,49 +469,95 @@ useEffect(() => {
 
       {exitTicketCounts.length > 0 && (
   <div style={{ marginTop: '40px' }}>
-    <h3>
-      {selectedSchool === 'All Schools'
-        ? selectedTicket === 'All Tickets'
-          ? 'Exit Ticket Count (All Tickets)'
-          : `Exit Ticket Count for "${selectedTicket}"`
-        : selectedTicket === 'All Tickets'
-          ? `Exit Tickets at ${selectedSchool}`
-          : `Count of "${selectedTicket}" at ${selectedSchool}`}
-    </h3>
-    <table
-      style={{
-        width: '100%',
-        borderCollapse: 'collapse',
-        marginTop: '20px',
-      }}
-      border="1"
-    >
-      <thead>
-        <tr>
-          <th>{selectedSchool === 'All Schools' ? 'School' : 'Exit Ticket'}</th>
-          <th>Count</th>
-        </tr>
-      </thead>
-      <tbody>
-        {exitTicketCounts.map((row) => (
-            <tr key={`${selectedSchool === 'All Schools' ? row.schoolName : selectedSchool}-${row.ticket || row.schoolName}`}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <h3 style={{ margin: 0, paddingRight: '10px', whiteSpace: 'nowrap' }}>
+        {selectedSchool === 'All Schools'
+          ? selectedTicket === 'All Tickets'
+            ? 'Exit Ticket Count (All Tickets)'
+            : `Exit Ticket Count for "${selectedTicket}"`
+          : selectedTicket === 'All Tickets'
+            ? `Exit Tickets at ${selectedSchool}`
+            : `Count of "${selectedTicket}" at ${selectedSchool}`}
+      </h3>
 
+      {/* Toggle button */}
+      <button
+        onClick={() => setShowExitTicketTable(!showExitTicketTable)}
+        style={{
+          cursor: 'pointer',
+          backgroundColor: '#c9b016',
+          border: 'none',
+          padding: '10px 18px',
+          borderRadius: '4px',
+          color: '#6e2c6f',
+          fontWeight: 'bold',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {showExitTicketTable ? 'Hide Details' : 'Show Details'}
+      </button>
+    </div>
+
+    {/* Conditionally render the table */}
+    {showExitTicketTable && (
+      <table
+        style={{
+          width: '100%',
+          borderCollapse: 'collapse',
+          marginTop: '10px',
+        }}
+        border="1"
+      >
+        <thead>
+          <tr>
+            <th>{selectedSchool === 'All Schools' ? 'School' : 'Exit Ticket'}</th>
+            <th>Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          {exitTicketCounts.map((row) => (
+            <tr key={`${selectedSchool === 'All Schools' ? row.schoolName : selectedSchool}-${row.ticket || row.schoolName}`}>
               <td>{selectedSchool === 'All Schools' ? row.schoolName : row.ticket}</td>
               <td>{row.count}</td>
             </tr>
-        ))}
-      </tbody>
-    </table>
+          ))}
+        </tbody>
+      </table>
+    )}
   </div>
-      )}
+)}
+
 
 
       {chartData && (
-          <div style={{marginTop: '40px' }}>
-          <h3>Submission Trend Over Time</h3>
-          <Line data={chartData} />
-        </div>
-      )}
+  <div style={{ marginTop: '40px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <h3 style={{ margin: 0, paddingRight: '10px', whiteSpace: 'nowrap' }}>
+        Submission Trend Over Time
+      </h3>
+      <button
+        onClick={() => setShowTimelineDetails(!showTimelineDetails)}
+        style={{
+          cursor: 'pointer',
+          backgroundColor: '#c9b016',
+          border: 'none',
+          padding: '10px 18px',
+          borderRadius: '4px',
+          color: '#6e2c6f',
+          fontWeight: 'bold',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {showTimelineDetails ? 'Hide Details' : 'Show Details'}
+      </button>
+    </div>
+
+    {showTimelineDetails && (
+      <Line data={chartData} />
+    )}
+  </div>
+)}
+
     </div>
   );
 };

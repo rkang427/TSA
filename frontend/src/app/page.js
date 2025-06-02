@@ -14,6 +14,7 @@ import CityDemographicsChart from '@/components/CityDemographicsChart';
 import HowMuchChart from '@/components/HowMuchChart'
 import useCSVData from '@/hooks/useCSVData';
 import HowWellChart from "@/components/HowWellChart";
+import HowBetterOffChart from "@/components/HowBetterOffChart";
 
 
 
@@ -401,43 +402,30 @@ const Home = () => {
             <HowWellChart demograph={howWellData}/>
         )}
 
-
-        {/* old code - uncomment if not running well */}
-        {/*<div style={{marginTop: '1rem', color: 'rgb(110, 44, 111)'}}>*/}
-        {/*  <button className="dataButton" onClick={() => router.push('/view-data')}>*/}
-        {/*    View Data*/}
-        {/*  </button>*/}
-        {/*</div>*/}
-        {/*<div style={{display: 'flex', flexDirection: 'row', width: '100%'}}>*/}
-        {/*  <div style={{width: '60%'}}>*/}
-        {/*    <MapChart onFeatureClick={setHoveredFeature} demograph={demograph} />*/}
-        {/*  </div>*/}
-
-        {/* {showGenderTable && (*/}
-        {/*<div style={{border: '3px solid rgb(201, 176, 22)', width: '40%', padding: '1rem'}}>*/}
-        {/*  <h3 className='graphTitle' >*/}
-        {/*    Top 7 Counties with Highest Participation*/}
-        {/*  </h3>*/}
-        {/*  <TopCountyGenderChart countyFreq={countyFreq} />*/}
-        {/*</div>*/}
-        {/*)}*/}
-
-        {/*    {hoveredFeature && (*/}
-        {/*        <div style={{width: '80%', padding: '1rem'}}>*/}
-        {/*          <div className='graphTitle'>*/}
-        {/*            <h3>Exit Ticket Count for {hoveredFeature.zipCode} ({hoveredFeature.city})</h3>*/}
-        {/*          </div>*/}
-        {/*            <ExitTicketChart data={hoveredFeature.exitTicketData} />*/}
-        {/*        </div>*/}
-        {/*    )}*/}
-        {/*  </div>*/}
-
-        {/*  <div style={{display: 'flex', justifyContent: 'space-between', width: '100%', height: '100%'}}>*/}
-        {/*      <CityDemographicsChart demograph={demograph}/>*/}
-
-        {/*      <BeforeAfterChart beforeAfterData={beforeAfterData} />*/}
-        {/*  </div>*/}
-
+        <div style={{marginTop: '80px', padding: '20px', display: 'flex'}}>
+          <h1>How Better Off?</h1>
+          <button
+              onClick={() => setShowChart3(prev => !prev)}
+              style={{
+                marginBottom: '20px',
+                marginLeft: '20px',
+                marginTop: '25px',
+                height: '40px',
+                padding: '10px 10px',
+                backgroundColor: '#c9b016',
+                color: '#6e2c6f',
+                border: 'none',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                fontWeight: 'bold'
+              }}
+          >
+            {showChart3 ? 'Less Information' : 'More Info'}
+          </button>
+        </div>
+        {showChart3 && (
+            <HowBetterOffChart demograph={howWellData}/>
+        )}
       </div>
   );
 
