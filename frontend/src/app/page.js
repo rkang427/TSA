@@ -4,7 +4,7 @@ import Papa from 'papaparse';
 import Chart from 'chart.js/auto';
 import 'ol/ol.css';
 import { useRouter } from 'next/navigation';
-
+import Link from 'next/link';
 //graph components
 import BeforeAfterChart from '@/components/BeforeAfterChart';
 import TopCountyGenderChart from '@/components/TopCountyGenderChart';
@@ -337,7 +337,9 @@ useEffect(() => {
    return (
     <div style={{ position: "relative", padding: "20px", maxWidth: 1200, margin: "0 auto" }}>
       <div style={{ position: "absolute", top: "30px", left: "30px", zIndex: 1001 }}>
-        <img src="/logo.png" alt="Logo" style={{ height: "60px" }} />
+          <Link href="https://scholarshipacademy.org/online/" target="_blank" rel="noopener noreferrer">
+            <img src="/logo.png" alt="Logo" style={{ height: "60px" }} />
+          </Link>
       </div>
 
       <div
