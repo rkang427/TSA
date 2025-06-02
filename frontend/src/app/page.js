@@ -15,34 +15,31 @@ import HowMuchChart from '@/components/HowMuchChart'
 import useCSVData from '@/hooks/useCSVData';
 import HowWellChart from "@/components/HowWellChart";
 import HowBetterOffChart from "@/components/HowBetterOffChart";
+import ImpactChart from "@/components/ImpactChart";
 
 
 
 const Home = () => {
+  const [activeTab, setActiveTab] = useState("impact"); // 'impact', 'howMuch', 'howWell', 'howBetterOff'
+
   const demograph = useCSVData('/cleaned_data_with_sem.csv');
-  const beforeAfterData = useCSVData('/before_and_after.csv');
-  const semanticsData = useCSVData('/semantics.csv');
-  const semanticsLabels = useCSVData('/sem_sentiment.csv');
-  const semanticsScores = useCSVData('/sem_sentiment_score.csv');
+  const geo = useCSVData('/georgia_longitude_and_latitude.csv')
+  // const beforeAfterData = useCSVData('/before_and_after.csv');
+  // const semanticsData = useCSVData('/semantics.csv');
+  // const semanticsLabels = useCSVData('/sem_sentiment.csv');
+  // const semanticsScores = useCSVData('/sem_sentiment_score.csv');
   const [hoveredFeature, setHoveredFeature] = useState(null);
   const [showChart1, setShowChart1] = useState(false);
   const [showChart2, setShowChart2] = useState(false);
   const [showChart3, setShowChart3] = useState(false);
+  const [showChartImpact, setShowChartImpact] = useState(false);
 
-
-  const exitTicketChartRef = useRef(null);
-  const router = useRouter();
-  const [showGenderTable, setShowGenderTable] = useState(true);
-  const [countyFreq, setCountyFreq] = useState([]);
 
   //   NEW DESIGN STARTING HERE   //
   //for HowMuchChart.js
   const [howMuchDataCity, setHowMuchDataCity] = useState({});
-  const [howMuchData, setHowMuchData] = useState({});
-
-
   const [howWellData, setHowWellData] = useState({});
-
+  const [impactData, setImpactData] = useState({});
 
   // PILLAR 1 - HOW MUCH //
   //for HowMuchChart.js
@@ -273,160 +270,117 @@ const Home = () => {
   setHowWellData(processedData);
 }, [demograph]);
 
+    useEffect(() => {
+  if (!demograph.length || !geo.length) return;
 
-  // old code - uncomment if not running well
-  //for top 7 counties
-  // useEffect(() => {
-  //   if (!demograph.length) return;
-  //
-  //   const countyData = demograph.reduce((acc, curr) => {
-  //     const county = curr['County of Residence'];
-  //     const gender = curr['Gender'];
-  //
-  //     if (county && county !== 'Unknown') {
-  //       if (!acc[county]) {
-  //         acc[county] = { count: 1, gender: {} };
-  //       } else {
-  //         acc[county].count += 1;
-  //       }
-  //
-  //       if (gender && gender !== 'Unknown') {
-  //         acc[county].gender[gender] = (acc[county].gender[gender] || 0) + 1;
-  //       }
-  //     }
-  //     return acc;
-  //   }, {});
-  //
-  //   const sortedCountyFreq = Object.entries(countyData)
-  //     .map(([county, data]) => ({ county, ...data }))
-  //     .sort((a, b) => b.count - a.count);
-  //
-  //   setCountyFreq(sortedCountyFreq.slice(0, 7));
-  // }, [demograph]);
+  const geoLookup = geo.reduce((acc, loc) => {
+    const key = `${(loc.City || '').toLowerCase().trim()}_${(loc.Zip || '').trim()}`;
+    acc[key] = {
+      latitude: parseFloat(loc.Latitude),
+      longitude: parseFloat(loc.Longitude),
+      city: loc.City,
+      zip: loc.Zip
+    };
+    return acc;
+  }, {});
 
-  // useEffect(() => {
-  //   if (!hoveredFeature) return;
-  //
-  //   const { exitTicketData, genderData, raceData } = hoveredFeature;
-  //
-  //   const exitTicketLabels = Object.keys(exitTicketData.reduce((acc, curr) => {
-  //     acc[curr['Exit Ticket Name']] = (acc[curr['Exit Ticket Name']] || 0) + 1;
-  //     return acc;
-  //   }, {}));
-  //   const exitTicketCounts = exitTicketLabels.map(label =>
-  //     exitTicketData.filter(item => item['Exit Ticket Name'] === label).length
-  //   );
-  //
-  //   const renderChart = (ref, labels, data) => {
-  //     if (!ref.current) return;
-  //
-  //     if (ref.current.chartInstance) {
-  //       ref.current.chartInstance.destroy();
-  //     }
-  //     const ctx = ref.current.getContext('2d', { willReadFrequently: true });
-  //     ref.current.chartInstance = new Chart(ctx, {
-  //       type: 'bar',
-  //       data: {
-  //         labels,
-  //         datasets: [{
-  //           label: 'Count',
-  //           data,
-  //           backgroundColor: 'rgb(201, 176, 22)'
-  //         }]
-  //       },
-  //       options: { responsive: true }
-  //     });
-  //   };
-  //
-  //   renderChart(exitTicketChartRef, exitTicketLabels, exitTicketCounts);
-  // }, [hoveredFeature]);
+  const schoolCounts = demograph.reduce((acc, entry) => {
+    const school = entry['School Name'];
+    const city = entry['City'];
+    const zip = entry['Zip Code'];
 
+    if (!school || !city || !zip || school === 'Unknown') return acc;
 
-  return (
-      <div style={{display: 'flex', flexDirection: 'column', position: 'relative'}}>
-        <div style={{position: 'absolute', top: '30px', left: '30px', zIndex: 1001}}>
-          <img src="/logo.png" alt="Logo" style={{height: '60px'}}/>
-        </div>
+    const key = `${city.toLowerCase().trim()}_${zip.trim()}`;
 
-        <div style={{marginTop: '80px', padding: '20px', display: 'flex'}}>
-          <h1>How Much?</h1>
-          <button
-              onClick={() => setShowChart1(prev => !prev)}
-              style={{
-                marginBottom: '20px',
-                marginLeft: '20px',
-                marginTop: '25px',
-                height: '40px',
-                padding: '10px 10px',
-                backgroundColor: '#c9b016',
-                color: '#6e2c6f',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: 'pointer',
-                fontWeight: 'bold'
-              }}
-          >
-            {showChart1 ? 'Less Information' : 'More Info'}
-          </button>
+    if (!acc[school]) {
+      acc[school] = {
+        schoolName: school,
+        count: 0,
+        geoKey: key
+      };
+    }
 
-        </div>
+    acc[school].count += 1;
+    return acc;
+  }, {});
 
-        {showChart1 && (
-            <HowMuchChart data={howMuchDataCity}/>
-        )}
+  const impactMerged = Object.values(schoolCounts).map(school => {
+    const geoMatch = geoLookup[school.geoKey] || {};
+    return {
+      schoolName: school.schoolName,
+      count: school.count,
+      latitude: geoMatch.latitude,
+      longitude: geoMatch.longitude,
+      city: geoMatch.city,
+      zip: geoMatch.zip
+    };
+  }).filter(d => d.latitude && d.longitude);
+  setImpactData(impactMerged);
+}, [demograph, geo]);
 
-        <div style={{marginTop: '80px', padding: '20px', display: 'flex'}}>
-          <h1>How Well?</h1>
-          <button
-              onClick={() => setShowChart2(prev => !prev)}
-              style={{
-                marginBottom: '20px',
-                marginLeft: '20px',
-                marginTop: '25px',
-                height: '40px',
-                padding: '10px 10px',
-                backgroundColor: '#c9b016',
-                color: '#6e2c6f',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: 'pointer',
-                fontWeight: 'bold'
-              }}
-          >
-            {showChart2 ? 'Less Information' : 'More Info'}
-          </button>
-
-        </div>
-
-          {showChart2 && (
-            <HowWellChart demograph={howWellData}/>
-        )}
-
-        <div style={{marginTop: '80px', padding: '20px', display: 'flex'}}>
-          <h1>How Better Off?</h1>
-          <button
-              onClick={() => setShowChart3(prev => !prev)}
-              style={{
-                marginBottom: '20px',
-                marginLeft: '20px',
-                marginTop: '25px',
-                height: '40px',
-                padding: '10px 10px',
-                backgroundColor: '#c9b016',
-                color: '#6e2c6f',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: 'pointer',
-                fontWeight: 'bold'
-              }}
-          >
-            {showChart3 ? 'Less Information' : 'More Info'}
-          </button>
-        </div>
-        {showChart3 && (
-            <HowBetterOffChart demograph={howWellData}/>
-        )}
+   return (
+    <div style={{ position: "relative", padding: "20px", maxWidth: 1200, margin: "0 auto" }}>
+      <div style={{ position: "absolute", top: "30px", left: "30px", zIndex: 1001 }}>
+        <img src="/logo.png" alt="Logo" style={{ height: "60px" }} />
       </div>
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginTop: "80px",
+          paddingBottom: "20px",
+        }}
+      >
+        <h1>Our Impact in 2025</h1>
+
+        {/* Tabs on top right */}
+        <nav>
+          {["impact", "howMuch", "howWell", "howBetterOff"].map((tab) => {
+            const label =
+              tab === "impact"
+                ? "Impact"
+                : tab === "howMuch"
+                ? "How Much"
+                : tab === "howWell"
+                ? "How Well"
+                : "How Better Off";
+
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                style={{
+                  marginLeft: "15px",
+                  padding: "8px 16px",
+                  cursor: "pointer",
+                  backgroundColor: activeTab === tab ? "#c9b016" : "transparent",
+                  color: activeTab === tab ? "#6e2c6f" : "#333",
+                  border: "1px solid #c9b016",
+                  borderRadius: "5px",
+                  fontWeight: "bold",
+                }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+
+      <div style={{ minHeight: "600px" }}>
+        {activeTab === "impact" && (
+          <>
+            <ImpactChart demo={impactData} />
+          </>
+        )}
+        {activeTab === "howMuch" && <HowMuchChart data={howMuchDataCity} />}
+        {activeTab === "howWell" && <HowWellChart demograph={howWellData} />}
+        {activeTab === "howBetterOff" && <HowBetterOffChart demograph={howWellData} />}
+      </div>
+    </div>
   );
 
 };

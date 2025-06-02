@@ -10,7 +10,6 @@ const HowWellChart = ({ demograph }) => {
   const [selectedSchool, setSelectedSchool] = useState("All Schools");
   const [schools, setSchools] = useState([]);
 
-  // Effect for sorting schools
   useEffect(() => {
     if (demograph) {
       const sortedSchools = Object.entries(demograph)
