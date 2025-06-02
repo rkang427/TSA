@@ -26,7 +26,7 @@ const Home = () => {
   const demograph = useCSVData('/cleaned_data_with_sem.csv');
   const geo = useCSVData('/georgia_longitude_and_latitude.csv')
   // const beforeAfterData = useCSVData('/before_and_after.csv');
-  // const semanticsData = useCSVData('/semantics.csv');
+  const semanticsData = useCSVData('/semantics.csv');
   // const semanticsLabels = useCSVData('/sem_sentiment.csv');
   // const semanticsScores = useCSVData('/sem_sentiment_score.csv');
   const [hoveredFeature, setHoveredFeature] = useState(null);
@@ -34,6 +34,20 @@ const Home = () => {
   const [showChart2, setShowChart2] = useState(false);
   const [showChart3, setShowChart3] = useState(false);
   const [showChartImpact, setShowChartImpact] = useState(false);
+  const [combinedData, setCombinedData] = useState([]);
+
+useEffect(() => {
+  if (demograph.length && semanticsData.length && demograph.length === semanticsData.length) {
+    const merged = demograph.map((row, index) => ({
+      ...row,
+      ...semanticsData[index]
+    }));
+    console.log(merged);
+    console.log(1);
+    setCombinedData(merged);
+  }
+}, [demograph, semanticsData]);
+
 
 
   //   NEW DESIGN STARTING HERE   //
@@ -379,7 +393,7 @@ const Home = () => {
         )}
         {activeTab === "howMuch" && <HowMuchChart data={howMuchDataCity} />}
         {activeTab === "howWell" && <HowWellChart demograph={howWellData} />}
-        {activeTab === "howBetterOff" && <HowBetterOffChart demograph={howWellData} />}
+        {activeTab === "howBetterOff" && <HowBetterOffChart data={combinedData} />}
       </div>
     </div>
   );
