@@ -79,13 +79,13 @@ const HowWellChart = ({ demograph }) => {
       <div>
         <label>Select School: </label>
         <select onChange={handleSchoolChange} value={selectedSchool}>
-          <option value="All Schools">All Schools</option>
+          <option value="All Schools">All Schools ({schools.reduce((sum, s) => sum + (s.count ?? 0), 0)})</option>
           {schools && schools.length > 0 && (
             Array.from(new Set(schools.map(item => item.schoolName)))
               .filter(schoolName => schoolName && schoolName !== 'Unknown')
               .map(schoolName => (
                 <option key={schoolName} value={schoolName}>
-                  {schoolName}
+                  {schoolName} ({schools.find(s => s.schoolName === schoolName)?.count ?? 0})
                 </option>
               ))
           )}

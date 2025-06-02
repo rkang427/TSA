@@ -1,14 +1,10 @@
-"use client";
-
 import React, { useState, useEffect, useRef } from 'react';
-import {Doughnut, Line, Pie} from "react-chartjs-2";
-import Papa from 'papaparse';
+import { Doughnut, Line } from "react-chartjs-2";
 import dynamic from 'next/dynamic';
-
-
 
 const HowMuchChart = ({ data }) => {
   dynamic(() => import('./HowMuchChart'), { ssr: false });
+
   const [selectedSchool, setSelectedSchool] = useState('');
   const [schools, setSchools] = useState([]);
   const [chartData, setChartData] = useState(null);
@@ -18,11 +14,178 @@ const HowMuchChart = ({ data }) => {
   const [grade, setGrade] = useState(null);
   const [county, setCounty] = useState(null);
 
+  const [selectedTicket, setSelectedTicket] = useState('All Tickets');
+  const [allTickets, setAllTickets] = useState([]); // To store all unique ticket names
 
-  const mapRef = useRef(null);
-  const [countyCoordsMap, setCountyCoordsMap] = useState({});
-  const [mapInstance, setMapInstance] = useState(null);
+  useEffect(() => {
+    if (data) {
+      const sortedSchools = Object.entries(data)
+        .map(([schoolName, value]) => ({ schoolName, ...value }))
+        .sort((a, b) => a.schoolName.localeCompare(b.schoolName));
+      setSchools(sortedSchools);
 
+      setSelectedSchool('All Schools');
+      setSelectedTicket('All Tickets');
+    }
+  }, [data]);
+
+  const selectedData = selectedSchool === "All Schools"
+    ? schools
+    : schools.find((item) => item.schoolName === selectedSchool);
+
+  useEffect(() => {
+    if (!selectedData) return;
+
+    const dataArray = Array.isArray(selectedData) ? selectedData : [selectedData];
+    const ticketCounts = {};
+
+    dataArray.forEach((school) => {
+      if (!school.date) return;
+      Object.values(school.date).forEach(entry => {
+        if (Array.isArray(entry.tickets)) {
+          entry.tickets.forEach(ticket => {
+            if (ticket && ticket !== 'Unknown') {
+              ticketCounts[ticket] = (ticketCounts[ticket] || 0) + 1;
+            }
+          });
+        }
+      });
+    });
+    const ticketsWithCounts = Object.entries(ticketCounts)
+  .map(([ticket, count]) => ({ ticket, count }))
+  .sort((a, b) => b.count - a.count);
+
+    setAllTickets([{ ticket: 'All Tickets' }, ...ticketsWithCounts]);
+    setSelectedTicket('All Tickets');
+
+  }, [selectedData]);
+
+useEffect(() => {
+  if (!data) return;
+
+  const monthMap = {};
+
+  Object.entries(data).forEach(([schoolName, schoolData]) => {
+    if (!schoolData.date) return;
+
+    Object.entries(schoolData.date).forEach(([dateStr, entry]) => {
+      const date = new Date(dateStr);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+      if (!monthMap[monthKey]) {
+        monthMap[monthKey] = { count: 0, tickets: {} };
+      }
+
+      if (selectedTicket === 'All Tickets') {
+        monthMap[monthKey].count += entry.count || 0;
+      } else {
+        if (Array.isArray(entry.tickets) && entry.tickets.includes(selectedTicket)) {
+          monthMap[monthKey].count += entry.count || 0;
+        }
+      }
+
+      if (Array.isArray(entry.tickets)) {
+        entry.tickets.forEach((ticket) => {
+          if (ticket && ticket !== 'Unknown') {
+            monthMap[monthKey].tickets[ticket] = (monthMap[monthKey].tickets[ticket] || 0) + 1;
+          }
+        });
+      }
+    });
+  });
+
+  const sortedMonths = Object.keys(monthMap).sort();
+  const dateLabels = sortedMonths.map(monthKey => {
+    const [year, month] = monthKey.split('-');
+    return new Date(`${year}-${month}-01`).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short'
+    });
+  });
+
+  const submissionCounts = sortedMonths.map(monthKey => monthMap[monthKey].count);
+
+  setChartData({
+    labels: dateLabels,
+    datasets: [
+      {
+        label: selectedTicket === 'All Tickets' ? 'Monthly Submission Count' : `${selectedTicket} Submission Count`,
+        data: submissionCounts,
+        fill: false,
+        borderColor: 'rgba(201, 176, 22, 1)',
+        tension: 0.1,
+      },
+    ],
+  });
+
+}, [data, selectedTicket]);
+
+useEffect(() => {
+  if (!selectedData) return;
+
+  const isAllSchools = selectedSchool === 'All Schools';
+  const dataArray = Array.isArray(selectedData) ? selectedData : [selectedData];
+
+  if (isAllSchools) {
+    // Count by school
+    const countsBySchool = {};
+
+    dataArray.forEach((school) => {
+      let totalCount = 0;
+      if (!school.date) return;
+
+      Object.values(school.date).forEach(entry => {
+        const isIncluded = selectedTicket === 'All Tickets' || (
+          Array.isArray(entry.tickets) && entry.tickets.includes(selectedTicket)
+        );
+
+        if (isIncluded) {
+          totalCount += entry.count || 0;
+        }
+      });
+
+      if (totalCount > 0) {
+        countsBySchool[school.schoolName] = totalCount;
+      }
+    });
+
+    const sortedCounts = Object.entries(countsBySchool)
+      .map(([schoolName, count]) => ({ schoolName, count }))
+      .sort((a, b) => b.count - a.count);
+
+    setExitTicketCounts(sortedCounts);
+  } else {
+    // Count by ticket
+    const ticketCounts = {};
+    const school = dataArray[0];
+
+    if (school && school.date) {
+      Object.values(school.date).forEach(entry => {
+        if (Array.isArray(entry.tickets)) {
+          entry.tickets.forEach(ticket => {
+            if (ticket && ticket !== 'Unknown') {
+              if (
+                selectedTicket === 'All Tickets' ||
+                ticket === selectedTicket
+              ) {
+                ticketCounts[ticket] = (ticketCounts[ticket] || 0) + (entry.count || 0);
+              }
+            }
+          });
+        }
+      });
+    }
+
+    const sortedTickets = Object.entries(ticketCounts)
+      .map(([ticket, count]) => ({ ticket, count }))
+      .sort((a, b) => b.count - a.count);
+
+    setExitTicketCounts(sortedTickets);
+  }
+
+}, [selectedData, selectedTicket, selectedSchool]);
+
+//exit ticket survey agg ends
   useEffect(() => {
     if (data) {
       const sortedSchools = Object.entries(data)
@@ -36,72 +199,123 @@ setSchools(sortedSchools);
 
 
 
-  const selectedData = selectedSchool === "All Schools"
-  ? schools
-  : schools.find((item) => item.schoolName === selectedSchool);
-
   useEffect(() => {
-    if (selectedData && selectedData.gender) {
-      const genderDist = Object.entries(selectedData.gender).map(([gender, count]) =>
-      {
-          return { gender, count };
-    });
-      setGender({
-        labels: genderDist.map(({ gender }) => gender),
-        datasets: [
-          {
-            label: 'Gender',
-            data: genderDist.map(({ count }) => count),
-            backgroundColor: ['#6e2c6f', '#c9b016', '#e74c3c'],
-            fill: false,
-            borderColor: 'rgba(201, 176, 22, 1)',
-            tension: 0.1,
-          },
-        ],
-      });
-}
+    if (selectedData) {
+  const genderCounts = {};
 
-    if (selectedData && selectedData.race) {
-      const raceDist = Object.entries(selectedData.race).map(([race, count]) => {
-        return {race, count};
-      });
-      setEthnicity({
-        labels: raceDist.map(({race}) => race),
-        datasets: [
-          {
-            label: 'Ethnicity',
-            data: raceDist.map(({count}) => count),
-            backgroundColor: ['#6e2c6f', '#c9b016', '#e74c3c', '#f39c12', '#3498db', '#2ecc71'],
-            fill: false,
-            borderColor: 'rgba(201, 176, 22, 1)',
-            tension: 0.1,
-          },
-        ],
+  const dataArray = Array.isArray(selectedData) ? selectedData : [selectedData];
+  dataArray.forEach((school) => {
+  if (!school.date) return;
+
+  Object.values(school.date).forEach(entry => {
+    const isIncluded = selectedTicket === 'All Tickets' || (
+      Array.isArray(entry.tickets) && entry.tickets.includes(selectedTicket)
+    );
+
+    if (!isIncluded) return;
+
+    if (school.gender) {
+      Object.entries(school.gender).forEach(([gender, count]) => {
+        genderCounts[gender] = (genderCounts[gender] || 0) + count;
       });
     }
+  });
+});
 
-      if (selectedData && selectedData.grade) {
-      const gradeDist = Object.entries(selectedData.grade).map(([grade, count]) =>
+  const genderDist = Object.entries(genderCounts).map(([gender, count]) => ({ gender, count }));
+
+  setGender({
+    labels: genderDist.map(({ gender }) => gender),
+    datasets: [
       {
-          return { grade, count };
-    });
-      setGrade({
-        labels: gradeDist.map(({ grade }) => grade),
-        datasets: [
-          {
-            label: 'Grade',
-            data: gradeDist.map(({ count }) => count),
-            backgroundColor: ['#6e2c6f', '#c9b016', '#e74c3c','#f39c12', '#3498db', '#2ecc71'],
-            fill: false,
-            borderColor: 'rgba(201, 176, 22, 1)',
-            tension: 0.1,
-          },
-        ],
-      });
+        label: 'Gender',
+        data: genderDist.map(({ count }) => count),
+        backgroundColor: ['#6e2c6f', '#c9b016', '#e74c3c'],
+        fill: false,
+        borderColor: 'rgba(201, 176, 22, 1)',
+        tension: 0.1,
+      },
+    ],
+  });
 }
 
 
-  }, [selectedData]);
+
+  }, [selectedData, selectedTicket]);
+
+  useEffect(() => {
+  if (!selectedData) return;
+
+  const dataArray = Array.isArray(selectedData) ? selectedData : [selectedData];
+
+  const ethnicityCounts = {};
+  dataArray.forEach((school) => {
+  if (!school.date) return;
+
+  Object.values(school.date).forEach(entry => {
+    const isIncluded = selectedTicket === 'All Tickets' || (
+      Array.isArray(entry.tickets) && entry.tickets.includes(selectedTicket)
+    );
+
+    if (!isIncluded) return;
+
+    if (school.race) {
+      Object.entries(school.race).forEach(([ethnicity, count]) => {
+        ethnicityCounts[ethnicity] = (ethnicityCounts[ethnicity] || 0) + count;
+      });
+    }
+  });
+});
+
+  const ethnicityDist = Object.entries(ethnicityCounts).map(([ethnicity, count]) => ({ ethnicity, count }));
+  setEthnicity({
+    labels: ethnicityDist.map(({ ethnicity }) => ethnicity),
+    datasets: [
+      {
+        label: 'Ethnicity',
+        data: ethnicityDist.map(({ count }) => count),
+        backgroundColor: ['#6e2c6f', '#c9b016', '#e74c3c','#1abc9c', '#f39c12', '#9b59b6', '#3498db', '#e74c3c', '#2ecc71'],
+        borderColor: 'rgba(201, 176, 22, 1)'
+      },
+    ],
+  });
+
+  const gradeCounts = {};
+  dataArray.forEach((school) => {
+  if (!school.date) return;
+
+  Object.values(school.date).forEach(entry => {
+    const isIncluded = selectedTicket === 'All Tickets' || (
+      Array.isArray(entry.tickets) && entry.tickets.includes(selectedTicket)
+    );
+
+    if (!isIncluded) return;
+
+    if (school.grade) {
+      Object.entries(school.grade).forEach(([grade, count]) => {
+        gradeCounts[grade] = (gradeCounts[grade] || 0) + count;
+      });
+    }
+  });
+});
+
+  const gradeDist = Object.entries(gradeCounts)
+  .map(([grade, count]) => ({ grade, count }))
+  .filter(({ grade }) => grade.length <= 5);
+
+  setGrade({
+  labels: gradeDist.map(({ grade }) => grade),
+  datasets: [
+    {
+      label: 'Grade',
+      data: gradeDist.map(({ count }) => count),
+      backgroundColor: ['#6e2c6f', '#c9b016', '#e74c3c', '#2980b9', '#e67e22', '#8e44ad', '#27ae60', '#d35400', '#7f8c8d'],
+      borderColor: 'rgba(201, 176, 22, 1)',
+    },
+  ],
+});
+
+}, [selectedData, selectedTicket]);
 
 
 
@@ -118,57 +332,66 @@ setSchools(sortedSchools);
 
 
 
-  useEffect(() => {
-    if (selectedData && selectedData.date) {
-      const rawDateLabels = Object.keys(selectedData.date);
+useEffect(() => {
+  if (!selectedData) return;
 
-      const dateLabels = rawDateLabels.map((a) =>
-        new Date(a).toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        })
-      );
+  const dataArray = Array.isArray(selectedData) ? selectedData : [selectedData];
 
-      const dateCounts = rawDateLabels.map((date) => selectedData.date[date]);
-      const submissionCounts = dateCounts.map((entry) => entry.count);
-      const aggregatedTickets = {};
+  const monthMap = {};
+  dataArray.forEach((school) => {
+    if (!school.date) return;
 
-      Object.keys(selectedData.date).forEach((dateKey) => {
-        const dateData = selectedData.date[dateKey];
-        if (dateData && Array.isArray(dateData.tickets)) {
-          dateData.tickets.forEach((ticket) => {
-            if (ticket && ticket !== 'Unknown') {
-              aggregatedTickets[ticket] = (aggregatedTickets[ticket] || 0) + 1;
-            }
-          });
-        }
-      });
+    Object.entries(school.date).forEach(([dateStr, entry]) => {
+      const date = new Date(dateStr);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; // e.g., 2025-04
 
+      if (!monthMap[monthKey]) {
+        monthMap[monthKey] = { count: 0, tickets: {} };
+      }
 
-      //ticket counts
-      // TODO: onclick action with above
-      const aggregatedTicketArray = Object.entries(aggregatedTickets)
-        .map(([ticket, count]) => ({ ticket, count }))
-        .sort((a, b) => b.count - a.count);
-      setExitTicketCounts(aggregatedTicketArray);
+      monthMap[monthKey].count += entry.count || 0;
+      if (Array.isArray(entry.tickets)) {
+        entry.tickets.forEach((ticket) => {
+          if (ticket && ticket !== 'Unknown') {
+            monthMap[monthKey].tickets[ticket] = (monthMap[monthKey].tickets[ticket] || 0) + 1;
+          }
+        });
+      }
+    });
+  });
 
-      setChartData({
-        labels: dateLabels,
-        datasets: [
-          {
-            label: 'Submission Count',
-            data: submissionCounts,
-            fill: false,
-            borderColor: 'rgba(201, 176, 22, 1)',
-            tension: 0.1,
-          },
-        ],
-      });
-    }
-  }, [selectedSchool, data]);
+  const sortedMonths = Object.keys(monthMap).sort();
+  const dateLabels = sortedMonths.map(monthKey => {
+    const [year, month] = monthKey.split('-');
+    return new Date(`${year}-${month}-01`).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short'
+    });
+  });
+
+  const submissionCounts = sortedMonths.map(monthKey => monthMap[monthKey].count);
+
+  const aggregatedTickets = {};
+  sortedMonths.forEach((monthKey) => {
+    const ticketCounts = monthMap[monthKey].tickets;
+    Object.entries(ticketCounts).forEach(([ticket, count]) => {
+      aggregatedTickets[ticket] = (aggregatedTickets[ticket] || 0) + count;
+    });
+  });
+
+  setChartData({
+    labels: dateLabels,
+    datasets: [
+      {
+        label: 'Monthly Submission Count',
+        data: submissionCounts,
+        fill: false,
+        borderColor: 'rgba(201, 176, 22, 1)',
+        tension: 0.1,
+      },
+    ],
+  });
+}, [selectedSchool, data]);
 
 
 
@@ -183,115 +406,109 @@ setSchools(sortedSchools);
 
 
   return (
-      <div style={{fontFamily: 'Nunito, sans-serif', marginLeft: '30px'}}>
-        <label>
-          Select School:{' '}
-          <select
-              value={selectedSchool}
-              onChange={(e) => setSelectedSchool(e.target.value)}
-          >
-            <option value="">-- Select --</option>
-            {schools.map((s) => (
-                <option key={s.schoolName} value={s.schoolName}>
-                  {s.schoolName} ({s.count ?? 0})
-                </option>
-            ))}
-          </select>
-        </label>
+    <div style={{ fontFamily: 'Nunito, sans-serif', marginLeft: '30px' }}>
+      <label>
+        Select School:{' '}
+        <select
+          value={selectedSchool}
+          onChange={(e) => setSelectedSchool(e.target.value)}
+        >
+          <option value="All Schools">All Schools ({schools.reduce((sum, s) => sum + (s.count ?? 0), 0)})</option>
+          {schools.map((s) => (
+            <option key={s.schoolName} value={s.schoolName}>
+              {s.schoolName} ({s.count ?? 0})
+            </option>
+          ))}
+        </select>
+      </label>
 
-        {selectedData && (
-            <table
-                style={{
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  marginTop: '20px',
-                }}
-                border="1"
-            >
-              <thead>
-              <tr>
-                <th>Metric</th>
-                <th>Values</th>
-              </tr>
-              </thead>
-              <tbody>
-              <tr>
-                <td>Count</td>
-                <td>{selectedData.count}</td>
-              </tr>
-              <tr>
-                <td>County</td>
-                <td>{selectedData.county && Object.keys(selectedData.county).length > 0
-                    ? formatMetric(selectedData.county)
-                    : 'N/A'}</td>
-              </tr>
-              </tbody>
-            </table>
+      <br />
+
+      <label>
+        Select Exit Ticket:{' '}
+        <select
+            value={selectedTicket}
+            onChange={(e) => setSelectedTicket(e.target.value)}
+        >
+          {allTickets.map(({ticket, count}) => (
+              <option key={ticket} value={ticket}>
+                  {ticket === 'All Tickets' ? ticket : `${ticket} (${count ?? 0})`}
+
+              </option>
+          ))}
+        </select>
+
+      </label>
+
+      <div style={{marginTop: '40px', display: 'flex', gap: '40px', justifyContent: 'center'}}>
+        {gender && (
+            <div style={{width: '300px', height: '300px'}}>
+              <h3 style={{textAlign: 'center' }}>Gender Distribution</h3>
+            <Doughnut data={gender} />
+          </div>
         )}
-        <br></br>
-
-
-        <div style={{marginTop: '40px', display: 'flex', gap: '40px', justifyContent: 'center'}}>
-          {gender && (
-              <div style={{width: '300px', height: '300px'}}>
-                <h3 style={{textAlign: 'center'}}>Gender Distribution</h3>
-                <Doughnut data={gender}/>
-              </div>)}
-          {ethnicity && (
-              <div style={{width: '300px', height: '300px'}}>
-                <h3 style={{textAlign: 'center'}}>Ethnicity Distribution</h3>
-                <Doughnut data={ethnicity}/>
-              </div>)}
-          {grade && (
-              <div style={{width: '300px', height: '300px'}}>
-                <h3 style={{textAlign: 'center'}}>Grade Distribution</h3>
-                <Doughnut data={grade}/>
-              </div>)}
-        </div>
-        <br></br>
-        <br></br>
-
-
-        {
-            exitTicketCounts.length > 0 && (
-                <div style={{marginTop: '40px'}}>
-                  <h3>Exit Ticket Count</h3>
-                  <table
-                      style={{
-                        width: '100%',
-                        borderCollapse: 'collapse',
-                        marginTop: '20px',
-                      }}
-                      border="1"
-                  >
-                    <thead>
-                    <tr>
-                      <th>Exit Ticket</th>
-                      <th>Count</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {exitTicketCounts.length > 0 && exitTicketCounts.map(({ticket, count}) => (
-                        <tr key={ticket}>
-                          <td>{ticket}</td>
-                          <td>{count}</td>
-                        </tr>
-                    ))}
-                    </tbody>
-
-                  </table>
-                </div>
-            )}
-
-        {chartData && (
-            <div style={{marginTop: '40px'}}>
-              <h3>Submission Trend Over Time</h3>
-              <Line
-                  data={chartData}
-              />
-            </div>
+        {ethnicity && (
+          <div style={{ width: '300px', height: '300px' }}>
+            <h3 style={{ textAlign: 'center' }}>Ethnicity Distribution</h3>
+            <Doughnut data={ethnicity} />
+          </div>
+        )}
+        {grade && (
+          <div style={{ width: '300px', height: '300px' }}>
+            <h3 style={{ textAlign: 'center' }}>Grade Distribution</h3>
+            <Doughnut data={grade} />
+          </div>
         )}
       </div>
+      <br />
+      <br />
+
+      {exitTicketCounts.length > 0 && (
+  <div style={{ marginTop: '40px' }}>
+    <h3>
+      {selectedSchool === 'All Schools'
+        ? selectedTicket === 'All Tickets'
+          ? 'Exit Ticket Count (All Tickets)'
+          : `Exit Ticket Count for "${selectedTicket}"`
+        : selectedTicket === 'All Tickets'
+          ? `Exit Tickets at ${selectedSchool}`
+          : `Count of "${selectedTicket}" at ${selectedSchool}`}
+    </h3>
+    <table
+      style={{
+        width: '100%',
+        borderCollapse: 'collapse',
+        marginTop: '20px',
+      }}
+      border="1"
+    >
+      <thead>
+        <tr>
+          <th>{selectedSchool === 'All Schools' ? 'School' : 'Exit Ticket'}</th>
+          <th>Count</th>
+        </tr>
+      </thead>
+      <tbody>
+        {exitTicketCounts.map((row) => (
+            <tr key={`${selectedSchool === 'All Schools' ? row.schoolName : selectedSchool}-${row.ticket || row.schoolName}`}>
+
+              <td>{selectedSchool === 'All Schools' ? row.schoolName : row.ticket}</td>
+              <td>{row.count}</td>
+            </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+      )}
+
+
+      {chartData && (
+          <div style={{marginTop: '40px' }}>
+          <h3>Submission Trend Over Time</h3>
+          <Line data={chartData} />
+        </div>
+      )}
+    </div>
   );
 };
 
