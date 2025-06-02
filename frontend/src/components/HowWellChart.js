@@ -6,6 +6,8 @@ import {Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const HowWellChart = ({ demograph }) => {
+
+    console.log(demograph);
     const [chartData, setChartData] = useState(null);
     const [selectedSchool, setSelectedSchool] = useState("All Schools");
     const [schools, setSchools] = useState([]);

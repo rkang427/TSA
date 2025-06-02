@@ -15,7 +15,8 @@ import HowMuchChart from '@/components/HowMuchChart'
 import useCSVData from '@/hooks/useCSVData';
 import HowWellChart from "@/components/HowWellChart";
 import HowBetterOffChart from "@/components/HowBetterOffChart";
-import ImpactChart from "@/components/ImpactChart";
+//import ImpactChart from "@/components/ImpactChart";
+import ImpactMapClient from "@/components/ImpactMapClient";
 
 
 
@@ -373,7 +374,7 @@ const Home = () => {
       <div style={{ minHeight: "600px" }}>
         {activeTab === "impact" && (
           <>
-            <ImpactChart demo={impactData} />
+            <ImpactMapClient demo={impactData} />
           </>
         )}
         {activeTab === "howMuch" && <HowMuchChart data={howMuchDataCity} />}

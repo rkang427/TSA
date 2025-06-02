@@ -1,10 +1,11 @@
+// components/ImpactMapClientInner.js
 "use client";
 
 import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Circle, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
-const ImpactMap = ({ demo }) => {
+const ImpactMapClientInner = ({ demo }) => {
   const [geoData, setGeoData] = useState([]);
 
   useEffect(() => {
@@ -35,22 +36,21 @@ const ImpactMap = ({ demo }) => {
   return (
     <MapContainer
       center={center}
-      zoom={7}
+      zoom={9}
       style={{ height: "600px", width: "100%" }}
       scrollWheelZoom={false}
     >
       <TileLayer
-      url="https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png"
-      attribution='&copy; OpenStreetMap contributors &copy; CARTO'
-/>
-
+        url="https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png"
+        attribution='&copy; OpenStreetMap contributors &copy; CARTO'
+      />
 
       {geoData.map((school, idx) => (
         <Circle
           key={idx}
           center={[school.latitude, school.longitude]}
-          radius={school.count * 20 + 300}
-          pathOptions={{ color: 'purple', fillColor: 'purple', fillOpacity: 0.5 }}
+          radius={school.count * 20 + 700}
+          pathOptions={{ color: "purple", fillColor: "purple", fillOpacity: 0.5 }}
         >
           <Popup>
             <strong>{school.schoolName}</strong>
@@ -65,4 +65,4 @@ const ImpactMap = ({ demo }) => {
   );
 };
 
-export default ImpactMap;
+export default ImpactMapClientInner;
