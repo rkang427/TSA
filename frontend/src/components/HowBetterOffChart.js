@@ -18,7 +18,7 @@ const prepareDistributionData = (data, fieldName, color) => {
   const counts = {};
   data.forEach((entry) => {
     const key = entry[fieldName]?.trim();
-    if (key) {
+    if (key.toLowerCase() !== "unknown" && key ) {
       counts[key] = (counts[key] || 0) + 1;
     }
   });
@@ -122,7 +122,7 @@ const HowBetterOffChart = ({ data }) => {
   const [averageExperience, setAverageExperience] = useState(null);
   const [maxExperience, setMaxExperience] = useState(null);
   const [totalFAFSA, setTotalFAFSA] = useState(null);
-  const [charts, setCharts] = useState({ race: null, grade: null });
+  const [charts, setCharts] = useState({ race: null, county: null });
 
   const fixedColor = "#6e2c6f";
 
@@ -145,7 +145,7 @@ const HowBetterOffChart = ({ data }) => {
 
     setCharts({
       race: prepareDistributionData(data, "Race/Ethnicity", fixedColor),
-      grade: prepareDistributionData(data, "Grade Level", fixedColor),
+      county: prepareDistributionData(data, "County of Residence", fixedColor),
     });
   }, [data]);
 
@@ -160,7 +160,6 @@ const HowBetterOffChart = ({ data }) => {
         maxWidth: "100vw",
       }}
     >
-      {/* Top Stats */}
       <div
         style={{
           marginBottom: "30px",
@@ -199,7 +198,7 @@ const HowBetterOffChart = ({ data }) => {
         }}
       >
         {charts.race && <BarChart title="Race/Ethnicity Distribution" chartData={charts.race} />}
-        {charts.grade && <BarChart title="Grade Level Distribution" chartData={charts.grade} />}
+        {charts.county && <BarChart title="County Level Distribution" chartData={charts.county} />}
       </div>
 
       <SchoolTable data={data} />

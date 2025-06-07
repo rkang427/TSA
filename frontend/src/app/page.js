@@ -6,7 +6,6 @@ import 'ol/ol.css';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 //graph components
-import BeforeAfterChart from '@/components/BeforeAfterChart';
 import TopCountyGenderChart from '@/components/TopCountyGenderChart';
 import MapChart from '@/components/MapChart';
 import ExitTicketChart from '@/components/ExitTicketChart';
@@ -38,13 +37,13 @@ const Home = () => {
 
 useEffect(() => {
   if (demograph.length && semanticsData.length && demograph.length === semanticsData.length) {
-    const merged = demograph.map((row, index) => ({
+    const combinedDF = demograph.map((row, index) => ({
       ...row,
       ...semanticsData[index]
     }));
-    console.log(merged);
+    console.log(combinedDF);
     console.log(1);
-    setCombinedData(merged);
+    setCombinedData(combinedDF);
   }
 }, [demograph, semanticsData]);
 
@@ -363,7 +362,7 @@ useEffect(() => {
                 ? "How Much"
                 : tab === "howWell"
                 ? "How Well"
-                : "How Better Off";
+                : "Are They Better Off?";
 
             return (
               <button
@@ -397,6 +396,7 @@ useEffect(() => {
         {activeTab === "howWell" && <HowWellChart demograph={howWellData} />}
         {activeTab === "howBetterOff" && <HowBetterOffChart data={combinedData} />}
       </div>
+      <i style={{ opacity: 0.2 }}>Website designed and maintained by volunteer Rhee Kang</i>
     </div>
   );
 
